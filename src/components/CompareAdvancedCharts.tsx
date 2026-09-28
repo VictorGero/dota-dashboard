@@ -76,12 +76,12 @@ export function CompareAdvancedCharts({ p1Profile, p2Profile, p1Totals, p2Totals
 
   // 3. Hero Intersection
   const commonHeroes = useMemo(() => {
-    const p2HeroMap = new Map(p2Heroes.map((h: any) => [h.hero_id, h]));
+    const p2HeroMap = new Map<string | number, any>(p2Heroes.map((h: any) => [h.hero_id, h]));
     const common = [];
     for (const h1 of p1Heroes) {
       if (h1.games >= 5 && p2HeroMap.has(h1.hero_id)) {
         const h2 = p2HeroMap.get(h1.hero_id);
-        if (h2.games >= 5) {
+        if (h2 && h2.games >= 5) {
           const heroData = heroesConst.find((hc: any) => hc.id === Number(h1.hero_id));
           if (heroData) {
             common.push({

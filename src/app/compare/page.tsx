@@ -13,8 +13,8 @@ export default async function ComparePage(props: { searchParams: Promise<{ [key:
   
   const friendsProfiles = await Promise.all(FRIENDS_IDS.map(id => getPlayerProfile(id)));
 
-  let p1Profile, p2Profile, p1Totals, p2Totals, p1Wl, p2Wl, p1Peers;
-  let p1Matches, p2Matches, p1Heroes, p2Heroes, heroesConst, togetherMatches;
+  let p1Profile: any = null, p2Profile: any = null, p1Totals: any[] = [], p2Totals: any[] = [], p1Wl: any = null, p2Wl: any = null, p1Peers: any[] = [];
+  let p1Matches: any[] = [], p2Matches: any[] = [], p1Heroes: any[] = [], p2Heroes: any[] = [], heroesConst: any[] = [], togetherMatches: any[] = [];
   let synergy = null;
 
   if (p1Id && p2Id) {
