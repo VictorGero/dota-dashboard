@@ -24,6 +24,10 @@ export function Sidebar({ friends, selectedId }: { friends: any[], selectedId?: 
             <BarChart3 size={18} className="text-orange-400" />
             <span className="font-semibold">Heróis e Amigos</span>
           </Link>
+          <Link href="/compare" className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800/50 transition-colors text-slate-200">
+            <Users size={18} className="text-purple-400" />
+            <span className="font-semibold">Comparar Sinergia</span>
+          </Link>
         </div>
       </div>
 
