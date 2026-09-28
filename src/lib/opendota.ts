@@ -16,6 +16,12 @@ export async function getRecentMatches(accountId: string) {
   return res.json();
 }
 
+export async function getPlayerMatches(accountId: string, limit: number = 100) {
+  const res = await fetch(`https://api.opendota.com/api/players/${accountId}/matches?limit=${limit}`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export async function getMatchDetails(matchId: string | number) {
   const res = await fetch(`https://api.opendota.com/api/matches/${matchId}`);
   if (!res.ok) return null;

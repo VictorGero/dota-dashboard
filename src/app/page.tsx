@@ -1,10 +1,11 @@
-import { getPlayerProfile, getPlayerWL, getRecentMatches, getPlayerRatings, getHeroes, getItemsConstants } from '@/lib/opendota';
+import { getPlayerProfile, getPlayerWL, getRecentMatches, getPlayerMatches, getPlayerRatings, getHeroes, getItemsConstants } from '@/lib/opendota';
 import { SearchBar } from '@/components/SearchBar';
 import { MatchList } from '@/components/MatchList';
 import { MmrChart } from '@/components/MmrChart';
+import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { Sidebar } from '@/components/Sidebar';
 import { FilterToggle } from '@/components/FilterToggle';
-import { Trophy, Swords, Crosshair, TrendingUp, Target, Search, Activity } from 'lucide-react';
+import { Trophy, Swords, Crosshair, TrendingUp, Target, Search, Activity, BarChart2 } from 'lucide-react';
 
 const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975']; // Updated with requested friends
 
@@ -18,17 +19,19 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
   
   let profile = null;
   let wl = null;
-  let matches = null;
+  let matches = null; // Recent matches (for detailed table)
+  let allMatches = []; // 100 matches for analytics
   let ratings = null;
   let heroes = [];
   let itemsData = {};
   let detailedMatches = [];
   
   if (accountId) {
-    [profile, wl, matches, ratings, heroes, itemsData] = await Promise.all([
+    [profile, wl, matches, allMatches, ratings, heroes, itemsData] = await Promise.all([
       getPlayerProfile(accountId),
       getPlayerWL(accountId),
       getRecentMatches(accountId),
+      getPlayerMatches(accountId, 100),
       getPlayerRatings(accountId),
       getHeroes(),
       getItemsConstants()
@@ -179,6 +182,16 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
                    </div>
                  </div>
                </div>
+
+               {/* Analytics Dashboard (100 matches) */}
+               {allMatches && allMatches.length > 0 && (
+                 <div className="mt-8 mb-8">
+                   <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                     <BarChart2 className="text-blue-400" size={24} /> Análise do Histórico (100 partidas)
+                   </h3>
+                   <AnalyticsDashboard matches={allMatches} heroes={heroes} />
+                 </div>
+               )}
 
                {/* Matches Section */}
                {matches && matches.length > 0 && (
