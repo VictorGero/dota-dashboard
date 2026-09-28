@@ -1,9 +1,10 @@
 import { getPlayerProfile, getPlayerHeroes, getPlayerPeers, getHeroes } from '@/lib/opendota';
 import { SearchBar } from '@/components/SearchBar';
 import { Sidebar } from '@/components/Sidebar';
+import { StatsFilter } from '@/components/StatsFilter';
 import { Target, Users, Swords } from 'lucide-react';
 
-const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975']; 
+const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975', '11194455'];
 
 function getHeroImage(heroId: number, heroesList: any[]) {
   const hero = heroesList.find(h => h.id === Number(heroId));
@@ -21,6 +22,12 @@ export default async function StatsPage(props: { searchParams: Promise<{ [key: s
   const searchParams = await props.searchParams;
   const accountId = typeof searchParams.id === 'string' ? searchParams.id : undefined;
   
+  // Build query string for OpenDota API
+  const apiParams = new URLSearchParams();
+  if (searchParams.date && typeof searchParams.date === 'string') apiParams.set('date', searchParams.date);
+  if (searchParams.lobby_type && typeof searchParams.lobby_type === 'string') apiParams.set('lobby_type', searchParams.lobby_type);
+  const queryString = apiParams.toString();
+
   const friendsProfiles = await Promise.all(FRIENDS_IDS.map(id => getPlayerProfile(id)));
   
   let profile = null;
@@ -31,8 +38,8 @@ export default async function StatsPage(props: { searchParams: Promise<{ [key: s
   if (accountId) {
     [profile, playerHeroes, playerPeers, heroesConstants] = await Promise.all([
       getPlayerProfile(accountId),
-      getPlayerHeroes(accountId),
-      getPlayerPeers(accountId),
+      getPlayerHeroes(accountId, queryString),
+      getPlayerPeers(accountId, queryString),
       getHeroes()
     ]);
   }
@@ -62,11 +69,15 @@ export default async function StatsPage(props: { searchParams: Promise<{ [key: s
           {accountId && profile?.profile ? (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
                
-               <div className="flex items-center gap-4 mb-8">
-                 <img src={profile.profile.avatarmedium} alt="Avatar" className="w-16 h-16 rounded-full border-2 border-slate-700" />
-                 <div>
-                   <h2 className="text-3xl font-bold">{profile.profile.personaname} <span className="text-slate-500 font-normal">/ Estatísticas Avançadas</span></h2>
+               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+                 <div className="flex items-center gap-4">
+                   <img src={profile.profile.avatarmedium} alt="Avatar" className="w-16 h-16 rounded-full border-2 border-slate-700" />
+                   <div>
+                     <h2 className="text-3xl font-bold">{profile.profile.personaname} <span className="text-slate-500 font-normal">/ Heróis e Amigos</span></h2>
+                   </div>
                  </div>
+                 
+                 <StatsFilter />
                </div>
 
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

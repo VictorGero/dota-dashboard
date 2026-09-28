@@ -11,6 +11,8 @@ export function AnalyticsDashboard({ matches, heroes }: { matches: any[], heroes
   const [filterResult, setFilterResult] = useState<string>('all'); // all, win, loss
   const [filterHero, setFilterHero] = useState<string>('all');
   const [filterTime, setFilterTime] = useState<string>('all'); // all, 30d, 7d
+  const [filterFaction, setFilterFaction] = useState<string>('all'); // all, radiant, dire
+  const [filterParty, setFilterParty] = useState<string>('all'); // all, solo, party
 
   // Derive unique heroes played from the 100 matches
   const playedHeroes = useMemo(() => {
@@ -38,10 +40,19 @@ export function AnalyticsDashboard({ matches, heroes }: { matches: any[], heroes
       // Time
       if (filterTime === '30d' && (now - m.start_time) > 30 * 24 * 60 * 60) return false;
       if (filterTime === '7d' && (now - m.start_time) > 7 * 24 * 60 * 60) return false;
+      
+      // Faction
+      const isRadiant = m.player_slot < 128;
+      if (filterFaction === 'radiant' && !isRadiant) return false;
+      if (filterFaction === 'dire' && isRadiant) return false;
+      
+      // Party
+      if (filterParty === 'solo' && m.party_size !== 1) return false;
+      if (filterParty === 'party' && (!m.party_size || m.party_size <= 1)) return false;
 
       return true;
     }).reverse(); // Reverse so chronological order (oldest first for charts)
-  }, [matches, filterMode, filterResult, filterHero, filterTime]);
+  }, [matches, filterMode, filterResult, filterHero, filterTime, filterFaction, filterParty]);
 
   // Chart Data Preparation
   const chartData = useMemo(() => {
@@ -101,6 +112,18 @@ export function AnalyticsDashboard({ matches, heroes }: { matches: any[], heroes
             <option value="all">Todo o Histórico (100+)</option>
             <option value="30d">Últimos 30 Dias</option>
             <option value="7d">Últimos 7 Dias</option>
+          </select>
+
+          <select value={filterFaction} onChange={e => setFilterFaction(e.target.value)} className="bg-slate-800 text-slate-200 p-2 rounded-xl border border-slate-600 focus:outline-none focus:border-red-400">
+            <option value="all">Qualquer Lado</option>
+            <option value="radiant">Radiant (Iluminados)</option>
+            <option value="dire">Dire (Temidos)</option>
+          </select>
+
+          <select value={filterParty} onChange={e => setFilterParty(e.target.value)} className="bg-slate-800 text-slate-200 p-2 rounded-xl border border-slate-600 focus:outline-none focus:border-red-400">
+            <option value="all">Solo / PT</option>
+            <option value="solo">Somente Solo</option>
+            <option value="party">Em Grupo (PT)</option>
           </select>
         </div>
       </div>

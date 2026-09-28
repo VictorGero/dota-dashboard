@@ -46,14 +46,22 @@ export async function getItemsConstants() {
   return res.json();
 }
 
-export async function getPlayerHeroes(accountId: string) {
-  const res = await fetch(`https://api.opendota.com/api/players/${accountId}/heroes`);
+export async function getPlayerHeroes(accountId: string, queryParams: string = '') {
+  const url = `https://api.opendota.com/api/players/${accountId}/heroes${queryParams ? `?${queryParams}` : ''}`;
+  const res = await fetch(url);
   if (!res.ok) return [];
   return res.json();
 }
 
-export async function getPlayerPeers(accountId: string) {
-  const res = await fetch(`https://api.opendota.com/api/players/${accountId}/peers`);
+export async function getPlayerPeers(accountId: string, queryParams: string = '') {
+  const url = `https://api.opendota.com/api/players/${accountId}/peers${queryParams ? `?${queryParams}` : ''}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function getPlayerTotals(accountId: string) {
+  const res = await fetch(`https://api.opendota.com/api/players/${accountId}/totals`);
   if (!res.ok) return [];
   return res.json();
 }

@@ -1,13 +1,13 @@
-import { getPlayerProfile, getPlayerWL, getRecentMatches, getPlayerMatches, getPlayerRatings, getHeroes, getItemsConstants } from '@/lib/opendota';
+import { getPlayerProfile, getPlayerWL, getRecentMatches, getPlayerMatches, getPlayerRatings, getPlayerTotals, getHeroes, getItemsConstants } from '@/lib/opendota';
 import { SearchBar } from '@/components/SearchBar';
 import { MatchList } from '@/components/MatchList';
 import { MmrChart } from '@/components/MmrChart';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { Sidebar } from '@/components/Sidebar';
 import { FilterToggle } from '@/components/FilterToggle';
-import { Trophy, Swords, Crosshair, TrendingUp, Target, Search, Activity, BarChart2 } from 'lucide-react';
+import { Trophy, Swords, Crosshair, TrendingUp, Target, Search, Activity, BarChart2, Star } from 'lucide-react';
 
-const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975']; // Updated with requested friends
+const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975', '11194455']; // Updated with requested friends
 
 export default async function Home(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const searchParams = await props.searchParams;
@@ -22,17 +22,19 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
   let matches = null; // Recent matches (for detailed table)
   let allMatches = []; // 100 matches for analytics
   let ratings = null;
+  let totals = [];
   let heroes = [];
   let itemsData = {};
   let detailedMatches = [];
   
   if (accountId) {
-    [profile, wl, matches, allMatches, ratings, heroes, itemsData] = await Promise.all([
+    [profile, wl, matches, allMatches, ratings, totals, heroes, itemsData] = await Promise.all([
       getPlayerProfile(accountId),
       getPlayerWL(accountId),
       getRecentMatches(accountId),
       getPlayerMatches(accountId, 100),
       getPlayerRatings(accountId),
+      getPlayerTotals(accountId),
       getHeroes(),
       getItemsConstants()
     ]);
@@ -163,23 +165,53 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
                    </div>
                  </div>
                  
-                 {/* Stats/Summary Section (Placeholder for now) */}
-                 <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-700/50">
-                    <h3 className="text-xl font-bold mb-6 text-slate-100 flex items-center gap-2">
-                     <Crosshair size={20} className="text-red-400" /> Visão Geral
-                   </h3>
-                   <div className="space-y-4">
-                     <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50">
-                        <p className="text-sm text-slate-400">ID da Conta</p>
-                        <p className="font-mono text-lg text-slate-200 mt-1">{profile.profile.account_id}</p>
-                     </div>
-                     <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50">
-                        <p className="text-sm text-slate-400">Último Login</p>
-                        <p className="text-lg text-slate-200 mt-1">
-                          {profile.profile.last_login ? new Date(profile.profile.last_login).toLocaleDateString() : 'Desconhecido'}
-                        </p>
-                     </div>
-                   </div>
+                 {/* Lifetime Stats Section */}
+                 <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-700/50 flex flex-col gap-4">
+                    <h3 className="text-xl font-bold mb-4 text-slate-100 flex items-center gap-2">
+                       <Target size={20} className="text-purple-400" /> Vida Toda (Estatísticas)
+                    </h3>
+                    
+                    {totals && totals.length > 0 ? (() => {
+                      const kills = totals.find((t: any) => t.field === 'kills')?.sum || 0;
+                      const deaths = totals.find((t: any) => t.field === 'deaths')?.sum || 0;
+                      const assists = totals.find((t: any) => t.field === 'assists')?.sum || 0;
+                      const gpm = totals.find((t: any) => t.field === 'gold_per_min')?.sum || 0;
+                      const xpm = totals.find((t: any) => t.field === 'xp_per_min')?.sum || 0;
+                      const durationSecs = totals.find((t: any) => t.field === 'duration')?.sum || 0;
+                      const totalMatches = totals.find((t: any) => t.field === 'kills')?.n || 1;
+                      
+                      return (
+                        <div className="space-y-6 flex-1 flex flex-col justify-center">
+                          <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                            <span className="text-slate-400 font-medium">Partidas Totais</span>
+                            <span className="text-2xl font-black text-white">{totalMatches}</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                            <span className="text-slate-400 font-medium">Tempo de Jogo</span>
+                            <span className="text-xl font-bold text-white">{Math.floor(durationSecs / 3600)} horas</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                            <span className="text-slate-400 font-medium">KDA Médio</span>
+                            <div className="text-right">
+                              <div className="text-xl font-bold text-white">{((kills + assists) / (deaths || 1)).toFixed(2)}</div>
+                              <div className="text-xs text-slate-500 font-mono mt-1">{Math.round(kills/totalMatches)} / {Math.round(deaths/totalMatches)} / {Math.round(assists/totalMatches)}</div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center pb-3">
+                            <span className="text-slate-400 font-medium">Economia Média</span>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-yellow-500">{Math.round(gpm/totalMatches)} GPM</div>
+                              <div className="text-lg font-bold text-blue-400 mt-1">{Math.round(xpm/totalMatches)} XPM</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })() : (
+                      <div className="text-slate-500 text-center py-10">Carregando estatísticas...</div>
+                    )}
                  </div>
                </div>
 
