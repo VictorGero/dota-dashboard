@@ -4,7 +4,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { StatsFilter } from '@/components/StatsFilter';
 import { Target, Users, Swords } from 'lucide-react';
 
-const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975', '11194455'];
+const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975', '11194455', '40338610', '37217469', '86825171', '100138625'];
 
 function getHeroImage(heroId: number, heroesList: any[]) {
   const hero = heroesList.find(h => h.id === Number(heroId));

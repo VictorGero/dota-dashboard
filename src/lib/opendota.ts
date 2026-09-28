@@ -22,6 +22,12 @@ export async function getPlayerMatches(accountId: string, limit: number = 100) {
   return res.json();
 }
 
+export async function getMatchesTogether(p1Id: string, p2Id: string, limit: number = 5) {
+  const res = await fetch(`https://api.opendota.com/api/players/${p1Id}/matches?included_account_id=${p2Id}&limit=${limit}`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export async function getMatchDetails(matchId: string | number) {
   const res = await fetch(`https://api.opendota.com/api/matches/${matchId}`);
   if (!res.ok) return null;

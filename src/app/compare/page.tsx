@@ -1,9 +1,10 @@
-import { getPlayerProfile, getPlayerTotals, getPlayerWL, getPlayerPeers } from '@/lib/opendota';
+import { getPlayerProfile, getPlayerTotals, getPlayerWL, getPlayerPeers, getPlayerMatches, getPlayerHeroes, getHeroes, getMatchesTogether } from '@/lib/opendota';
 import { Sidebar } from '@/components/Sidebar';
 import { CompareSelector } from '@/components/CompareSelector';
+import { CompareAdvancedCharts } from '@/components/CompareAdvancedCharts';
 import { Target, Users, Swords, Activity, Crosshair, Star } from 'lucide-react';
 
-const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975', '11194455'];
+const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975', '11194455', '40338610', '37217469', '86825171', '100138625'];
 
 export default async function ComparePage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const searchParams = await props.searchParams;
@@ -13,17 +14,27 @@ export default async function ComparePage(props: { searchParams: Promise<{ [key:
   const friendsProfiles = await Promise.all(FRIENDS_IDS.map(id => getPlayerProfile(id)));
 
   let p1Profile, p2Profile, p1Totals, p2Totals, p1Wl, p2Wl, p1Peers;
+  let p1Matches, p2Matches, p1Heroes, p2Heroes, heroesConst, togetherMatches;
   let synergy = null;
 
   if (p1Id && p2Id) {
-    [p1Profile, p2Profile, p1Totals, p2Totals, p1Wl, p2Wl, p1Peers] = await Promise.all([
+    [
+      p1Profile, p2Profile, p1Totals, p2Totals, p1Wl, p2Wl, p1Peers,
+      p1Matches, p2Matches, p1Heroes, p2Heroes, heroesConst, togetherMatches
+    ] = await Promise.all([
       getPlayerProfile(p1Id),
       getPlayerProfile(p2Id),
       getPlayerTotals(p1Id),
       getPlayerTotals(p2Id),
       getPlayerWL(p1Id),
       getPlayerWL(p2Id),
-      getPlayerPeers(p1Id)
+      getPlayerPeers(p1Id),
+      getPlayerMatches(p1Id, 100),
+      getPlayerMatches(p2Id, 100),
+      getPlayerHeroes(p1Id),
+      getPlayerHeroes(p2Id),
+      getHeroes(),
+      getMatchesTogether(p1Id, p2Id, 5)
     ]);
 
     synergy = p1Peers.find((p: any) => p.account_id.toString() === p2Id);
@@ -140,6 +151,71 @@ export default async function ComparePage(props: { searchParams: Promise<{ [key:
                   </div>
                 </div>
               </div>
+
+              {/* Advanced Charts Section */}
+              <CompareAdvancedCharts 
+                p1Profile={p1Profile} p2Profile={p2Profile} 
+                p1Totals={p1Totals} p2Totals={p2Totals} 
+                p1Matches={p1Matches} p2Matches={p2Matches} 
+                p1Heroes={p1Heroes} p2Heroes={p2Heroes} 
+                heroesConst={heroesConst} 
+              />
+
+              {/* Match History Together */}
+              {togetherMatches && togetherMatches.length > 0 && (
+                <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-700/50 shadow-xl mt-8">
+                  <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    <Activity className="text-orange-400" size={20} /> Histórico de Partidas (Juntos)
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {togetherMatches.map((m: any, idx: number) => {
+                      const isWin = (m.player_slot < 128) === m.radiant_win;
+                      const p1Hero = heroesConst.find((h: any) => h.id === m.hero_id);
+                      
+                      // For p2's hero, we have to look in the `heroes` object
+                      // OpenDota `included_account_id` populates `heroes` map
+                      let p2HeroId = null;
+                      if (m.heroes) {
+                         const p2PlayerKey = Object.keys(m.heroes).find(k => m.heroes[k].account_id?.toString() === p2Id);
+                         if (p2PlayerKey) p2HeroId = m.heroes[p2PlayerKey].hero_id;
+                      }
+                      const p2Hero = heroesConst.find((h: any) => h.id === p2HeroId);
+
+                      return (
+                        <div key={idx} className="bg-slate-800/60 p-4 rounded-xl border border-slate-700 flex justify-between items-center hover:bg-slate-800 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className={`px-3 py-1 rounded text-sm font-bold uppercase ${isWin ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                              {isWin ? 'Vitória' : 'Derrota'}
+                            </div>
+                            <div className="text-slate-400 text-sm">
+                              {new Date(m.start_time * 1000).toLocaleDateString()}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-bold text-blue-400 hidden md:block">{p1Profile.profile.personaname}</span>
+                              {p1Hero && <img src={`https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${p1Hero.name.replace('npc_dota_hero_', '')}.png`} className="w-10 h-10 rounded-full border border-blue-500" title={p1Hero.localized_name} />}
+                            </div>
+                            
+                            <Swords size={16} className="text-slate-600" />
+                            
+                            <div className="flex items-center gap-3">
+                              {p2Hero ? (
+                                <img src={`https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${p2Hero.name.replace('npc_dota_hero_', '')}.png`} className="w-10 h-10 rounded-full border border-red-500" title={p2Hero.localized_name} />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full border border-red-500 bg-slate-800" />
+                              )}
+                              <span className="text-sm font-bold text-red-400 hidden md:block">{p2Profile.profile.personaname}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
             </div>
           ) : (

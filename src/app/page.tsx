@@ -7,7 +7,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { FilterToggle } from '@/components/FilterToggle';
 import { Trophy, Swords, Crosshair, TrendingUp, Target, Search, Activity, BarChart2, Star } from 'lucide-react';
 
-const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975', '11194455']; // Updated with requested friends
+const FRIENDS_IDS = ['41092826', '112970123', '1138540883', '90178975', '11194455', '40338610', '37217469', '86825171', '100138625'];
 
 export default async function Home(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const searchParams = await props.searchParams;
